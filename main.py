@@ -9,6 +9,9 @@ video_extensions = ['.mp4', '.avi', '.mkv', '.mov']
 search_pattern = f"{path_to_videos}/*[{'|'.join(video_extensions)}]"
 video_files = glob.glob(search_pattern)  # All Files Name
 
+if not video_files:
+    print("\033[1;31;40m The input folder cannot be empty! \033[0;37;40m")
+    exit()
 
 user_text = input("Your Phone Number (list.txt): ")
 user_time = int(input("Time to change the text (Just Number/Default 0) : "))
@@ -42,4 +45,4 @@ for line in lines:
         ]
         subprocess.run(ffmpeg_cmd)
 
-print("Finish")
+print("\033[1;32;40m Finish \033[0;37;40m")
