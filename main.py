@@ -1,6 +1,8 @@
 import os
 import subprocess
 import glob
+import time
+
 from colorama import Fore, Back, Style, init
 
 
@@ -28,8 +30,8 @@ def main():
     user_size = int(input(Style.RESET_ALL + "Please Enter Font Size (Default 24) : " + Fore.GREEN))
     user_size = user_size if (60 >= user_size >= 6) else 16
 
-    user_color = input(Style.RESET_ALL + "Please Enter Text Color (hex => #ff0000) : " + Fore.GREEN)
-    user_bg_color = input(Style.RESET_ALL + "Please Enter Background Color (hex => #ff0000) : " + Fore.GREEN)
+    user_color = input(Style.RESET_ALL + "Please Enter Text Color (hex => #ff0000 Or color => red) : " + Fore.GREEN)
+    user_bg_color = input(Style.RESET_ALL + "Please Enter Background Color (hex => #ff0000 or color => black) : " + Fore.GREEN)
     print(Style.RESET_ALL)
 
     lines = []
@@ -47,18 +49,25 @@ def main():
             os.mkdir(f"{path_out_to_videos}/{line}")
 
         for video in video_files:
+            # Changing the position of the text according to the user's second as animation
             ffmpeg_cmd = [
                 "ffmpeg",
                 "-i", video,
                 "-vf",
-                f"drawtext=text='{line}':fontsize={user_size}:fontcolor={user_color}@{user_opacity}:fontfile=Fonts"
-                f"/IRANSans.ttf"
-                f":x=if(eq(mod(t\,{user_time})\,0)\,rand(0\,(w-text_w))\,x):y=if(eq(mod(t\,{user_time})\,"
-                f"0)\,rand(0\,(h-text_h))\,y):box=1:boxcolor={user_bg_color}@{user_opacity}:boxborderw=10",
+                f"drawtext=text='{line}':fontsize={user_size}:fontcolor={user_color}@{user_opacity}:fontfile=Fonts/IRANSans.ttf"
+                # f":x=if(eq(mod(t\,{user_time})\,0)\,rand(0\,(w-text_w))\,x)"
+                f":y='if(eq(mod(t,{user_time}),0),rand(0,(h-text_h)),y)'"
+                f":x='if(gte(t,{user_time}), (w-text_w)-mod((t-{user_time})*15, (w-text_w)), (w-text_w)/2)'"
+                # f":y='if(gte(t,{user_time}), (h-text_h)-mod((t-{user_time})*15, (h-text_h)), (h-text_h)/2)'"
+                f":box=1:boxcolor={user_bg_color}@{user_opacity}:boxborderw=10",
                 "-c:a", "copy",
                 video.replace(path_to_videos, (path_out_to_videos + f"\\{line}"))
             ]
             subprocess.run(ffmpeg_cmd)
+            print(" ")
+            print(Fore.GREEN + f"{video} complete!" + Style.RESET_ALL)
+            print(" ")
+            time.sleep(2)
 
     print("Finish")
 
