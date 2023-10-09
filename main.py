@@ -2,20 +2,25 @@ import os
 import subprocess
 import glob
 import time
+import shutil
 
-from colorama import Fore, Back, Style, init
+from colorama import Fore, Style, init
+
+
+path_to_videos = 'Input'  # Path Directory
+path_out_to_videos = 'Output'  # Path Directory
+video_extensions = ['.mp4', '.avi', '.mkv', '.mov']
 
 
 def main():
     init()
     # Search All Video in Input Path
-    path_to_videos = 'Input'  # Path Directory
-    path_out_to_videos = 'Output'  # Path Directory
-    video_extensions = ['.mp4', '.avi', '.mkv', '.mov']
     search_pattern = f"{path_to_videos}/*[{'|'.join(video_extensions)}]"
     video_files = glob.glob(search_pattern)  # All Files Name
 
-    if not video_files:  # If there is no video available
+    subdirectories = [subdir for subdir in os.listdir(path_to_videos) if os.path.isdir(os.path.join(path_to_videos, subdir))]  # Sub Directories
+
+    if not subdirectories and not video_files:  # If there is no video available
         print(Fore.RED + "The input folder cannot be empty!" + Style.RESET_ALL)
         exit()
 
@@ -35,41 +40,79 @@ def main():
     print(Style.RESET_ALL)
 
     lines = []
-    if os.path.exists(user_text):
+
+    if os.path.exists(user_text):  # Check Existed Text User (UserFile => list.txt)
         with open(user_text, 'r') as file:
             for line in file:
                 cleaned_line = line.strip()
                 lines.append(cleaned_line)
-
     else:
         lines.append('WaterMark')
 
-    for line in lines:
-        if not os.path.exists(f"{path_out_to_videos}/{line}"):
-            os.mkdir(f"{path_out_to_videos}/{line}")
+    if video_files:
+        for line in lines:
+            if not os.path.exists(f"{path_out_to_videos}/{line}"):
+                os.mkdir(f"{path_out_to_videos}/{line}")
 
-        for video in video_files:
-            # Changing the position of the text according to the user's second as animation
-            ffmpeg_cmd = [
-                "ffmpeg",
-                "-i", video,
-                "-vf",
-                f"drawtext=text='{line}':fontsize={user_size}:fontcolor={user_color}@{user_opacity}:fontfile=Fonts/IRANSans.ttf"
-                # f":x=if(eq(mod(t\,{user_time})\,0)\,rand(0\,(w-text_w))\,x)"
-                f":y='if(eq(mod(t,{user_time}),0),rand(0,(h-text_h)),y)'"
-                f":x='if(gte(t,{user_time}), (w-text_w)-mod((t-{user_time})*15, (w-text_w)), (w-text_w)/2)'"
-                # f":y='if(gte(t,{user_time}), (h-text_h)-mod((t-{user_time})*15, (h-text_h)), (h-text_h)/2)'"
-                f":box=1:boxcolor={user_bg_color}@{user_opacity}:boxborderw=10",
-                "-c:a", "copy",
-                video.replace(path_to_videos, (path_out_to_videos + f"\\{line}"))
-            ]
-            subprocess.run(ffmpeg_cmd)
-            print(" ")
-            print(Fore.GREEN + f"{video} complete!" + Style.RESET_ALL)
-            print(" ")
-            time.sleep(2)
+            loopWaterMark(video_files, line, user_size, user_color, user_opacity, user_time, user_bg_color)
+
+    if subdirectories:
+        for line in lines:
+            if not os.path.exists(f"{path_out_to_videos}/{line}"):
+                os.mkdir(f"{path_out_to_videos}/{line}")
+
+            for subdir in subdirectories:
+                input_subdir = os.path.join(path_to_videos, subdir)
+                output_subdir = os.path.join(f"{path_out_to_videos}/{line}", subdir)
+
+                if not os.path.exists(output_subdir):
+                    os.makedirs(output_subdir)
+
+                video_files = glob.glob(os.path.join(input_subdir, f"*[{'|'.join(video_extensions)}]"))
+
+                if not video_files:
+                    print(Fore.RED + f"No video files found in {input_subdir}" + Style.RESET_ALL)
+                    continue
+
+                loopWaterMark(video_files, line, user_size, user_color, user_opacity, user_time, user_bg_color)
+
+                all_files = os.listdir(input_subdir)
+                for file_name in all_files:
+                    source_file_path = os.path.join(input_subdir, file_name)
+                    destination_file_path = os.path.join(output_subdir, file_name)
+
+                    file_extension = os.path.splitext(file_name)[1]
+
+                    if file_extension not in video_extensions:
+                        if os.path.isfile(source_file_path):
+                            shutil.copy(source_file_path, destination_file_path)
+                        elif os.path.isdir(source_file_path):
+                            shutil.copytree(source_file_path, destination_file_path)
 
     print("Finish")
+
+
+def loopWaterMark(videos_file, line, user_size, user_color, user_opacity, user_time, user_bg_color):
+    for video in videos_file:
+        # Changing the position of the text according to the user's second as animation
+        ffmpeg_cmd = [
+            "ffmpeg",
+            "-i", video,
+            "-vf",
+            f"drawtext=text='{line}':fontsize={user_size}:fontcolor={user_color}@{user_opacity}:fontfile=Fonts/IRANSans.ttf"
+            # f":x=if(eq(mod(t\,{user_time})\,0)\,rand(0\,(w-text_w))\,x)"
+            f":y='if(eq(mod(t,{user_time}),0),rand(0,(h-text_h)),y)'"
+            f":x='if(gte(t,{user_time}), (w-text_w)-mod((t-{user_time})*15, (w-text_w)), (w-text_w)/2)'"
+            # f":y='if(gte(t,{user_time}), (h-text_h)-mod((t-{user_time})*15, (h-text_h)), (h-text_h)/2)'"
+            f":box=1:boxcolor={user_bg_color}@{user_opacity}:boxborderw=10",
+            "-c:a", "copy",
+            video.replace(path_to_videos, (path_out_to_videos + f"\\{line}"))
+        ]
+        subprocess.run(ffmpeg_cmd)
+        print(" ")
+        print(Fore.GREEN + f"{video} complete!" + Style.RESET_ALL)
+        print(" ")
+        time.sleep(2)
 
 
 if __name__ == "__main__":
