@@ -36,7 +36,7 @@ def main():
     user_size = user_size if (60 >= user_size >= 6) else 16
 
     user_color = input(Style.RESET_ALL + "Please Enter Text Color (hex => #ff0000 Or color => red) : " + Fore.GREEN)
-    user_bg_color = input(Style.RESET_ALL + "Please Enter Background Color (hex => #ff0000 or color => black) : " + Fore.GREEN)
+    user_bg_color = input(Style.RESET_ALL + "Please Enter Background Color (hex => #000000 or color => black) : " + Fore.GREEN)
     print(Style.RESET_ALL)
 
     lines = []
