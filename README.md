@@ -25,6 +25,7 @@ This Python script allows you to add watermarks to videos with various customiza
 ## Requirements
 - python 3.x
 - FFmpeg
+- colorama (pip install colorama)
 
 ## Example
 
