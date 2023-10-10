@@ -4,12 +4,12 @@ import glob
 import time
 import shutil
 
-from colorama import Fore, Style, init
+from colorama import Fore, Back, Style, init
 
 
 path_to_videos = 'Input'  # Path Directory
 path_out_to_videos = 'Output'  # Path Directory
-video_extensions = ['.mp4', '.avi', '.mkv', '.mov']
+video_extensions = ['.mp4', '.avi', '.mkv', '.mov']  # Videos Extensions Allowed
 
 
 def main():
@@ -24,20 +24,32 @@ def main():
         print(Fore.RED + "The input folder cannot be empty!" + Style.RESET_ALL)
         exit()
 
-    user_text = input("Your Phone Number (list.txt): " + Fore.GREEN)
+    # noinspection PyBroadException
+    try:
+        user_text = input("Your Phone Number (list.txt): " + Fore.GREEN)  # WaterMark Lists (Phone Numbers)
+        user_text = 'list.txt' if user_text == '' else user_text
 
-    user_time = int(input(Style.RESET_ALL + "Time to change the text (Just Number/Second) : " + Fore.GREEN))
-    user_time = user_time if user_time != 0 else 60  # 60 Second
+        user_time = input(Style.RESET_ALL + "Time to change the text (Just Number/Second - Default 60 Second) : " + Fore.GREEN)
+        user_time = 60 if user_time == '' else int(user_time)
+        user_time = user_time if user_time != 0 else 60  # 60 Second
 
-    user_opacity = float(input(Style.RESET_ALL + "Please Enter Opacity (Between 0.0 to 1.0) : " + Fore.GREEN))
-    user_opacity = user_opacity if (1.0 >= user_opacity > 0) else 0.5
+        user_opacity = input(Style.RESET_ALL + "Please Enter Opacity (Between 0.0 to 1.0 - Default 0.2) : " + Fore.GREEN)
+        user_opacity = 0.2 if user_opacity == '' else float(user_opacity)
+        user_opacity = user_opacity if (1.0 >= user_opacity > 0) else 0.5
 
-    user_size = int(input(Style.RESET_ALL + "Please Enter Font Size (Default 24) : " + Fore.GREEN))
-    user_size = user_size if (60 >= user_size >= 6) else 16
+        user_size = input(Style.RESET_ALL + "Please Enter Font Size (Default 22) : " + Fore.GREEN)
+        user_size = 22 if user_size == '' else int(user_size)
+        user_size = user_size if (80 >= user_size >= 6) else 16
 
-    user_color = input(Style.RESET_ALL + "Please Enter Text Color (hex => #ff0000 Or color => red) : " + Fore.GREEN)
-    user_bg_color = input(Style.RESET_ALL + "Please Enter Background Color (hex => #000000 or color => black) : " + Fore.GREEN)
-    print(Style.RESET_ALL)
+        user_color = input(Style.RESET_ALL + "Please Enter Text Color (hex => #ffffff Or color => white - default white) : " + Fore.GREEN)
+        user_color = 'white' if user_color == '' else user_color
+        user_bg_color = input(Style.RESET_ALL + "Please Enter Background Color (hex => #000000 or color => black - default black) : " + Fore.GREEN)
+        user_bg_color = 'black' if user_bg_color == '' else user_bg_color
+        print(Style.RESET_ALL)
+    except:
+        print('')
+        print(Back.BLACK + Fore.RED + 'Be sure to pay attention to the type of value you enter' + Style.RESET_ALL)
+        exit()
 
     lines = []
 
@@ -100,9 +112,9 @@ def loopWaterMark(videos_file, line, user_size, user_color, user_opacity, user_t
             "-i", video,
             "-vf",
             f"drawtext=text='{line}':fontsize={user_size}:fontcolor={user_color}@{user_opacity}:fontfile=Fonts/IRANSans.ttf"
-            # f":x=if(eq(mod(t\,{user_time})\,0)\,rand(0\,(w-text_w))\,x)"
+            f":x='if(eq(mod(t,{user_time}),0),rand(0,(w-text_w)),x')"
             f":y='if(eq(mod(t,{user_time}),0),rand(0,(h-text_h)),y)'"
-            f":x='if(gte(t,{user_time}), (w-text_w)-mod((t-{user_time})*15, (w-text_w)), (w-text_w)/2)'"
+            # f":x='if(gte(t,{user_time}), (w-text_w)-mod((t-{user_time})*15, (w-text_w)), (w-text_w)/2)'"
             # f":y='if(gte(t,{user_time}), (h-text_h)-mod((t-{user_time})*15, (h-text_h)), (h-text_h)/2)'"
             f":box=1:boxcolor={user_bg_color}@{user_opacity}:boxborderw=10",
             "-c:a", "copy",
