@@ -3,6 +3,7 @@ import subprocess
 import glob
 import time
 import shutil
+import random
 
 from colorama import Fore, Back, Style, init
 
@@ -26,6 +27,9 @@ def main():
 
     # noinspection PyBroadException
     try:
+        random_video = input("Random WaterMark Number (Default 0 (Without Random) - Just Number): " + Fore.GREEN)  # WaterMark Lists (Phone Numbers)
+        random_video = 0 if random_video == '' else int(random_video)
+
         user_text = input("Your Phone Number (list.txt): " + Fore.GREEN)  # WaterMark Lists (Phone Numbers)
         user_text = 'list.txt' if user_text == '' else user_text
 
@@ -66,7 +70,7 @@ def main():
             if not os.path.exists(f"{path_out_to_videos}/{line}"):
                 os.mkdir(f"{path_out_to_videos}/{line}")
 
-            loopWaterMark(video_files, line, user_size, user_color, user_opacity, user_time, user_bg_color)
+            loopWaterMark(video_files, line, user_size, user_color, user_opacity, user_time, user_bg_color, random_video)
 
     if subdirectories:
         for line in lines:
@@ -86,7 +90,7 @@ def main():
                     print(Fore.RED + f"No video files found in {input_subdir}" + Style.RESET_ALL)
                     continue
 
-                loopWaterMark(video_files, line, user_size, user_color, user_opacity, user_time, user_bg_color)
+                loopWaterMark(video_files, line, user_size, user_color, user_opacity, user_time, user_bg_color, random_video)
 
                 all_files = os.listdir(input_subdir)
                 for file_name in all_files:
@@ -104,8 +108,20 @@ def main():
     print("Finish")
 
 
-def loopWaterMark(videos_file, line, user_size, user_color, user_opacity, user_time, user_bg_color):
-    for video in videos_file:
+def loopWaterMark(videos_file, line, user_size, user_color, user_opacity, user_time, user_bg_color, random_waterMark=0):
+    all_video = []
+    videos_not_selected = []
+    if random_waterMark:
+        number_all_videos = len(videos_file)
+        if random_waterMark > number_all_videos:
+            print(Back.BLACK + Fore.RED + 'The random number is larger than all videos' + Style.RESET_ALL)
+            exit()
+        all_video = random.sample(videos_file, random_waterMark)
+        videos_not_selected = [vid for vid in videos_file if vid not in all_video]
+    else:
+        all_video = videos_file
+
+    for video in all_video:
         # Changing the position of the text according to the user's second as animation
         ffmpeg_cmd = [
             "ffmpeg",
@@ -125,6 +141,11 @@ def loopWaterMark(videos_file, line, user_size, user_color, user_opacity, user_t
         print(Fore.GREEN + f"{video} complete!" + Style.RESET_ALL)
         print(" ")
         time.sleep(2)
+
+    if len(videos_not_selected) != 0:
+        for video in videos_not_selected:
+            output = video.replace(path_to_videos, (path_out_to_videos + f"\\{line}"))
+            shutil.copy(video, output)
 
 
 if __name__ == "__main__":
